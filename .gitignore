@@ -1,2 +1,9 @@
 node_modules
+uploads
+public/assets
+public/favicon.ico
+public/favicon1.ico
+public/index.html
+public/placeholder.svg
+public/robots.txt
 .env

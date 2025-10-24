@@ -17,7 +17,7 @@ router.post('/login', userController.login);
 // @route   GET api/users
 // @desc    Get all users
 // @access  Private
-router.get('/', auth, userController.getUsers);
+router.get('/', userController.getUsers);
 
 // @route   GET api/users/:id
 // @desc    Get user by id
