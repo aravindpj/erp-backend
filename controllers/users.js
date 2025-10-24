@@ -74,12 +74,9 @@ exports.login = async (req, res) => {
       return res.status(400).json({ msg: "Invalid credentials" });
     }
 
-    const payload = {
-      user: {
-        id: user.id,
-        email:user.email
-      },
-    };
+    user?.password && (user.password = null);
+
+    const payload = { user };
 
     jwt.sign(
       payload,
@@ -87,9 +84,6 @@ exports.login = async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) throw err;
-        if (user.password) {
-          delete user.password;
-        }
         res.json({ token, user });
       }
     );
@@ -104,7 +98,6 @@ exports.getUsers = async (req, res) => {
     const users = await User.find().select("-password");
     res.json(users);
   } catch (err) {
-    console.error(err.message);
     res.status(500).send("Server error");
   }
 };
