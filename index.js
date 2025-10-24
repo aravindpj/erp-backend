@@ -1,12 +1,13 @@
 
 const express = require('express');
 const path = require('path');
-const connectDB = require('./config/db');
-const upload = require("./config/multer")
+const connectDB = require('./config/db.config');
+const upload = require("./config/multer.config")
+const responseHandler = require('./middleware/response.middleware');
 require('dotenv').config();
-
 const app = express();
 
+app.use(responseHandler)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -25,7 +26,7 @@ app.get('/', (req, res) => {
 });
 
 // Define Routes
-app.use('/api/users',upload.single("file"), require('./routes/users'));
+app.use('/api/users',upload.single("file"), require('./routes/users.route'));
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);

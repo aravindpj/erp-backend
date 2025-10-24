@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const User = require("../models/User.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -63,15 +63,13 @@ exports.login = async (req, res) => {
 
   try {
     let user = await User.findOne({ email });
-    console.log("user details=>", user);
     if (!user) {
-      return res.status(400).json({ msg: "Invalid credentials" });
+      return res.error({ message: "Invalid credentials",status:400 });
     }
-
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      return res.status(400).json({ msg: "Invalid credentials" });
+      return res.error({ message: "Invalid credentials",status:400 });
     }
 
     user?.password && (user.password = null);
@@ -81,38 +79,36 @@ exports.login = async (req, res) => {
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: 360000 },
+      { expiresIn: 10},
       (err, token) => {
         if (err) throw err;
-        res.json({ token, user });
+        res.success({data:{ token, user }});
       }
     );
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
+  } catch (error) {
+    res.error({status:500,error});
   }
 };
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password");
-    res.json(users);
-  } catch (err) {
-    res.status(500).send("Server error");
+    const data = await User.find().select("-password");
+    res.success({data,status:200});
+  } catch (error) {
+    res.error({status:500,error});
   }
 };
 
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const data = await User.findById(req.params.id).select("-password");
     if (!user) {
-      return res.status(404).json({ msg: "User not found" });
+      return res.error({status:404,message:"User not found"});
     }
-    res.json(user);
-  } catch (err) {
-    console.error(err.message);
+    res.success({status:200,data});
+  } catch (error) {
     if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "User not found" });
+      return res.error({status:404,message:"User not found",error});
     }
     res.status(500).send("Server error");
   }
@@ -144,7 +140,6 @@ exports.updateUser = async (req, res) => {
 
     res.json(user);
   } catch (err) {
-    console.error(err.message);
     res.status(500).send("Server error");
   }
 };
