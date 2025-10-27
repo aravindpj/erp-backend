@@ -4,9 +4,12 @@ const path = require('path');
 const connectDB = require('./config/db.config');
 const upload = require("./config/multer.config")
 const responseHandler = require('./middleware/response.middleware');
+const cors = require("cors")
 require('dotenv').config();
 const app = express();
-
+app.use(cors({
+  origin:"*"
+}))
 app.use(responseHandler)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -16,7 +19,7 @@ connectDB();
 
 const port = parseInt(process.env.PORT) || process.argv[3] || 8080;
 
-app.use(express.static(path.join(__dirname, 'uploads')))
+app.use("/uploads",express.static(path.join(__dirname, 'uploads')))
 app.use(express.static(path.join(__dirname, 'public')))
   .set('views', path.join(__dirname, 'views'))
   .set('view engine', 'ejs');
