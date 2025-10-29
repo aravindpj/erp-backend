@@ -7,7 +7,7 @@ const auth = require('../middleware/auth.middleware');
 // @route   POST api/users/register
 // @desc    Register user
 // @access  Public
-router.post('/register',userController.register);
+router.post('/register',auth,userController.register);
 
 // @route   POST api/users/login
 // @desc    Authenticate user & get token

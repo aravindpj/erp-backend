@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
-
+const Counter = require("./Counter.model");
 const UserSchema = new mongoose.Schema({
   id: {
     type: String,
-    required: true,
+    required: false,
+    unique:true
   },
   userName: {
     type: String,
@@ -42,6 +43,25 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: Date.now,
   },
+});
+
+UserSchema.pre("save", async function (next) {
+  const user = this;
+  if (user.id) return next();
+  try {
+    const counter = await Counter.findByIdAndUpdate(
+      { _id: "userId" },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    const seqNumber = counter.seq.toString().padStart(5, "0"); // "00001"
+    console.log("seqNumber",seqNumber)
+    user.id = `ERP${seqNumber}`;
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 module.exports = mongoose.model("User", UserSchema);

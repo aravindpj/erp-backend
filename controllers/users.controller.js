@@ -7,7 +7,6 @@ require("dotenv").config();
 
 exports.register = async (req, res) => {
   const {
-    id,
     userName,
     email,
     password,
@@ -31,9 +30,7 @@ exports.register = async (req, res) => {
     if (user) {
       return res.status(400).json({ msg: "User already exists" });
     }
-
     user = new User({
-      id,
       userName,
       email,
       shortName,
@@ -45,14 +42,11 @@ exports.register = async (req, res) => {
     });
 
     const salt = await bcrypt.genSalt(10);
-
     user.set("password", await bcrypt.hash(password, salt));
+    console.log("before create");
     await user.save();
-    const payload = {
-      user: {
-        id: user.id,
-      },
-    };
+    console.log("after create");
+    const payload = { user };
 
     jwt.sign(
       payload,
@@ -60,12 +54,12 @@ exports.register = async (req, res) => {
       { expiresIn: 360000 },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        res.success({message:"User created successfully",data:{token, user} });
       }
     );
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
+  } catch (error) {
+    console.error(error.message);
+    res.error({ status: 500, error });
   }
 };
 
@@ -156,23 +150,22 @@ exports.updateUser = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
-    let user = await User.findById(req.params.id);
-
-    if (!user) return res.status(404).json({ msg: "User not found" });
+    console.log(req.params.id)
+    let user = await User.findOne({id:req.params.id});
+    console.log(req.user.id)
+    if (!user) return res.error({ status: 404, message: "User not found" });
 
     // Check if user owns the account
-    if (user.id.toString() !== req.user.id) {
-      return res.status(401).json({ msg: "Not authorized" });
+    if (user.id.toString() == req.user.id) {
+      return res.error({ status: 401, msg: "Not authorized" });
     }
-
-    await User.findByIdAndRemove(req.params.id);
-
-    res.json({ msg: "User removed" });
+    await User.findOneAndDelete({ id: req.params.id });
+    res.success({ status: 200, message: `User with id ${user.id} removed` });
   } catch (err) {
     console.error(err.message);
     if (err.kind === "ObjectId") {
-      return res.status(404).json({ msg: "User not found" });
+      return res.error({ status: 404, message: "User not found" });
     }
-    res.status(500).send("Server error");
+    res.error({ status: 500 });
   }
 };
