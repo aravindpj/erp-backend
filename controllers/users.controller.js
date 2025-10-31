@@ -1,5 +1,6 @@
 const User = require("../models/User.model");
 const path = require("path");
+const moment = require("moment");
 const fs = require("fs");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -15,7 +16,7 @@ exports.register = async (req, res) => {
     userRole,
     imageUrl = "",
   } = req.body;
-  console.log(req.body);
+  
   try {
     let user = await User.findOne({ email });
     let shortName = "";

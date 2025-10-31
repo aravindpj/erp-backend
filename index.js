@@ -2,7 +2,6 @@
 const express = require('express');
 const path = require('path');
 const connectDB = require('./config/db.config');
-const upload = require("./config/multer.config")
 const responseHandler = require('./middleware/response.middleware');
 const cors = require("cors")
 require('dotenv').config();
@@ -29,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 // Define Routes
-app.use('/api/users',upload.single("file"), require('./routes/users.route'));
+app.use('/api', require('./routes/mainRoutes'));
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);

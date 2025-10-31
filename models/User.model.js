@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const moment = require("moment");
 const Counter = require("./Counter.model");
 const UserSchema = new mongoose.Schema({
   id: {
@@ -41,7 +42,7 @@ const UserSchema = new mongoose.Schema({
   },
   date: {
     type: String,
-    default: Date.now,
+    default: moment().format("DD-MM-YYYY hh:mm A"),
   },
 });
 
@@ -56,7 +57,6 @@ UserSchema.pre("save", async function (next) {
     );
 
     const seqNumber = counter.seq.toString().padStart(5, "0"); // "00001"
-    console.log("seqNumber",seqNumber)
     user.id = `ERP${seqNumber}`;
     next();
   } catch (err) {
