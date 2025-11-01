@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "debug": "ndb index.js"
+    "debug": "ndb index.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +25,7 @@
     "path": "^0.12.7"
   },
   "devDependencies": {
+    "eslint": "^9.39.0",
     "nodemon": "^3.0.1"
   }
 }
