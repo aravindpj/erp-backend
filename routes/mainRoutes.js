@@ -4,5 +4,6 @@ const router = express.Router();
 router.use("/users",upload.single("file"),require("./users.route"))
 router.use("/client",upload.single("file"),require("./client.route"))
 router.use("/job",upload.single("file"),require("./job.routes"))
+router.use("/worksheet",upload.single("file"),require("./worksheet.route"))
 
 module.exports = router
