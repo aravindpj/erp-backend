@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 // Define Routes
-app.use('/api', require('./routes/mainRoutes'));
+app.use('/api', require('./routes/main.route'));
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);

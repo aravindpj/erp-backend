@@ -7,6 +7,7 @@ const jobController = require("../controllers/job.controller")
 // @access  Public
 router.post('/',auth,jobController.saveJobRequest);
 router.get('/:id',auth,jobController.getJobRequests);
+router.get('/details/:id',jobController.getJobDetails);
 router.put('/',auth,jobController.updateJobRequest);
 
 module.exports = router
