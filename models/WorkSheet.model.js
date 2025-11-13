@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
-const Counter = require("./Counter.model")
-// Schema for options inside fields
+const Counter = require("./Counter.model");
+
+// ===== Option Schema =====
 const OptionSchema = new mongoose.Schema(
   {
     optionId: { type: String, required: true },
@@ -9,7 +10,41 @@ const OptionSchema = new mongoose.Schema(
   { _id: false }
 );
 
-// Schema for fields inside sections
+// ===== Table Column Schema =====
+const TableColumnSchema = new mongoose.Schema(
+  {
+    columnId: { type: String, required: true },
+    name: { type: String, required: true },
+    type: {
+      type: String,
+      required: true,
+      enum: [
+        "textfield",
+        "textarea",
+        "checkbox",
+        "radio",
+        "select",
+        "autocomplete",
+        "autocomplete-chips",
+        "file",
+      ],
+    },
+    options: { type: [OptionSchema], default: [] }, // only for select/radio
+  },
+  { _id: false }
+);
+
+// ===== Table Actions Schema =====
+const TableActionsSchema = new mongoose.Schema(
+  {
+    edit: { type: Boolean, default: false },
+    view: { type: Boolean, default: false },
+    delete: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+// ===== Field Schema =====
 const FieldSchema = new mongoose.Schema(
   {
     fieldId: { type: String, required: true },
@@ -26,19 +61,25 @@ const FieldSchema = new mongoose.Schema(
         "autocomplete",
         "autocomplete-chips",
         "file",
+        "table", // ✅ added table type
       ],
     },
     required: { type: Boolean, default: false },
-    options: { type: [OptionSchema], default: [] }, // optional field
+    options: { type: [OptionSchema], default: [] }, // for select/radio/etc.
+
+    // ✅ only for table fields
+    tableColumns: { type: [TableColumnSchema], default: [] },
+    tableActions: { type: TableActionsSchema, default: null },
   },
   { _id: false }
 );
 
-// Schema for sections inside worksheet
+// ===== Section Schema =====
 const SectionSchema = new mongoose.Schema(
   {
     sectionId: { type: String, required: true },
     name: { type: String, required: true },
+    layout: { type: Number, default: 1 }, // ✅ added layout from your object
     fields: { type: [FieldSchema], default: [] },
   },
   { _id: false }
@@ -47,8 +88,9 @@ const SectionSchema = new mongoose.Schema(
 // Main worksheet schema
 const WorkSheetSchema = new mongoose.Schema(
   {
-    workSheetId: { type: String,},
+    workSheetId: { type: String },
     name: { type: String, required: true },
+    description: { type: String, required: false, default: "" },
     sections: { type: [SectionSchema], default: [] },
     isActive: { type: Boolean, default: true },
   },
@@ -74,3 +116,5 @@ WorkSheetSchema.pre("save", async function (next) {
 });
 
 module.exports = mongoose.model("WorkSheet", WorkSheetSchema);
+
+

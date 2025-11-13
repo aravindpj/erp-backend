@@ -20,7 +20,8 @@ const JobRequestSchema = new mongoose.Schema(
     summary: { type: String, required: true },
     detailsProvided: { type: String, required: true },
     comment: { type: String },
-    divisionRules: { type: String, required: true },
+    timeRequired: { type: String, required: true },
+    requiredDocument: { type: String, required: true },
     testRows: { type: [TestRowSchema], default: [] },
     status: {
       type: String,
