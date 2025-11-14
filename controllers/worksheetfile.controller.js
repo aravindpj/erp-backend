@@ -25,7 +25,7 @@ const COLORS = {
 
 const SPACING = {
   section: 12,
-  block: 8,
+  block: 2,
   cardPad: 8,
 };
 
@@ -73,70 +73,85 @@ function registerFonts(doc) {
 // 4. DRAWING
 // ---------------------------------------------------------------------
 function drawHeader(doc, mainObject, logoPath) {
-  const top = doc.page.margins.top;
+  const TOP_MARGIN = 10; // small space from top of page
+  const LOGO_SIZE = 50; // NDT Plus logo size
+  const HEADER_HEIGHT = 70; // total header height
 
-  // header background
-  doc.rect(0, 0, PAGE.width, top + 50).fill(COLORS.headerBg);
+  // Light-gray background
+  doc.rect(0, 0, PAGE.width, HEADER_HEIGHT).fill(COLORS.headerBg);
 
-  // logo
+  // ── LOGO (top-left, small) ───────────────────────────────────────
   if (logoPath && fs.existsSync(logoPath)) {
-    doc.image(logoPath, MARGIN, top - 8, { width: 70 });
+    doc.image(logoPath, MARGIN, TOP_MARGIN, { width: LOGO_SIZE });
   }
 
-  // title
+  // ── TITLE (centered) ─────────────────────────────────────────────
   doc
+    .font("Bold")
     .fontSize(20)
     .fillColor(COLORS.black)
-    .font("Bold")
-    .text(mainObject.name || "Worksheet", MARGIN, top + 8, { align: "center" });
+    .text(mainObject.name || "Worksheet", 0, TOP_MARGIN + 8, {
+      align: "center",
+      width: PAGE.width,
+    });
 
-  // generated date
+  // ── GENERATED DATE (top-right) ───────────────────────────────────
   doc
     .fontSize(9)
     .fillColor(COLORS.black)
     .text(
       `Generated: ${moment().format("DD MMM YYYY, hh:mm A")}`,
-      MARGIN,
-      top + 32,
+      0,
+      TOP_MARGIN + 32,
       {
         align: "right",
-        width: CONTENT_WIDTH,
+        width: PAGE.width - MARGIN,
       }
     );
 
-  // divider
+  // ── DIVIDER LINE ─────────────────────────────────────────────────
+  const lineY = HEADER_HEIGHT - 10;
   doc
-    .moveTo(MARGIN, top + 45)
-    .lineTo(PAGE.width - MARGIN, top + 45)
+    .moveTo(MARGIN, lineY)
+    .lineTo(PAGE.width - MARGIN, lineY)
+    .lineWidth(0.5)
     .stroke(COLORS.border);
-  doc.y = top + 55;
+
+  // Set cursor for next content
+  doc.y = HEADER_HEIGHT + 5;
 }
 
 // Footer drawn **once per page** (after page is added)
 function setupFooter(doc) {
+  let totalPages = 0;
   doc.on("pageAdded", () => {
-    const y = PAGE.height - 45;
-    doc
-      .fontSize(8)
-      .fillColor(COLORS.black)
-      .text("Printed version is uncontrolled.", MARGIN, y);
+    totalPages++;
+  });
 
-    doc.text(`Page ${doc.page.number}`, 0, y, {
-      align: "center",
-      width: PAGE.width,
-    });
+  doc.on("end", () => {
+    // Re-draw footers with correct page numbers
+    const pages = doc.bufferedPageRange();
+    for (let i = 0; i < pages.count; i++) {
+      doc.switchToPage(i);
+      const y = PAGE.height - 45;
 
-    doc.text(
-      `Created at ${moment().format("ddd, DD MMM YYYY, hh:mm A")}`,
-      0,
-      y,
-      { align: "right", width: PAGE.width - MARGIN }
-    );
-
-    doc
-      .moveTo(MARGIN, y - 6)
-      .lineTo(PAGE.width - MARGIN, y - 6)
-      .stroke(COLORS.border);
+      doc.fontSize(8).fillColor(COLORS.black);
+      doc.text("Printed version is uncontrolled.", MARGIN, y);
+      doc.text(`Page ${i + 1} of ${pages.count}`, 0, y, {
+        align: "center",
+        width: PAGE.width,
+      });
+      doc.text(
+        `Created at ${moment().format("ddd, DD MMM YYYY, hh:mm A")}`,
+        0,
+        y,
+        { align: "right", width: PAGE.width - MARGIN }
+      );
+      doc
+        .moveTo(MARGIN, y - 6)
+        .lineTo(PAGE.width - MARGIN, y - 6)
+        .stroke(COLORS.border);
+    }
   });
 }
 
@@ -181,7 +196,9 @@ function drawKeyValueGrid(doc, section, record, layout = 2) {
         .fill(COLORS.light)
         .stroke(COLORS.border);
 
-      const line = `${fld.name} : ${val}`;
+      const line = `${fld.name} : ${
+        typeof val == "boolean" ? (val ? "✔️" : "❌") : val
+      }`;
       doc
         .fontSize(9.5)
         .fillColor(COLORS.black)
@@ -253,14 +270,105 @@ function drawTable(doc, tableDef, rows = []) {
       doc
         .fontSize(9)
         .fillColor(COLORS.black)
-        .text(String(val), x + 4, rowY + 4, {
-          width: colW - 8,
-          ellipsis: true,
-        });
+        .text(
+          typeof val == "boolean" ? (val ? "✔️" : "❌") : val,
+          x + 4,
+          rowY + 4,
+          {
+            width: colW - 8,
+            ellipsis: true,
+          }
+        );
     });
 
     doc.y = rowY + rowH + 2;
   });
+}
+
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS (NDT PLUS STYLE)
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS – NDT PLUS EXACT LAYOUT
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS – NDT PLUS STYLE (BORDER-LESS TABLE)
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS – NDT PLUS STYLE (TWO COLUMN, NO BORDERS)
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS – NDT PLUS EXACT LAYOUT (FROM SCREENSHOT)
+// ---------------------------------------------------------------------
+// ---------------------------------------------------------------------
+// 4.5 DRAW FIRST DETAILS – NDT PLUS EXACT LAYOUT (FIXED OVERLAP)
+// ---------------------------------------------------------------------
+function drawFirstDetails(doc, details) {
+  const ROW_H = 13; // line height
+  const TOP_MARGIN = 15; // space after header
+  const LABEL_W = 80; // label width
+  const VALUE_W = 220; // value width
+  const RIGHT_BLOCK_X = 380; // right block X (aligned to right)
+
+  let y = doc.y + TOP_MARGIN;
+
+  // ── HELPER: draw label + value (forces new line) ───────────────────
+  const drawLabelValue = (label, value, x, isBold = false) => {
+    const valueX = x + LABEL_W;
+    doc
+      .font(isBold ? "Bold" : "Helvetica")
+      .fontSize(10)
+      .fillColor(COLORS.black)
+      .text(label, x, y, { width: LABEL_W, continued: false });
+
+    doc
+      .font("Helvetica")
+      .text(value || "", valueX, y, { width: VALUE_W, continued: false });
+    y += ROW_H; // advance to next line
+  };
+
+  // ── JOB DESCRIPTION (full width, multi-line) ───────────────────────
+  drawLabelValue("Job Description:", details.jobDescription, MARGIN, true);
+  y += ROW_H * 1.5; // extra space after multi-line
+
+  // ── RIGHT BLOCK (starts at same Y as Job Description) ───────────────
+  let rightY = doc.y + TOP_MARGIN + ROW_H; // same start as Job Desc
+
+  const rightLabels = [
+    { label: "Report No.:", value: details.reportNumber },
+    { label: "Report Date:", value: details.reportDate },
+    { label: "Job No.:", value: details.jobNumber || "" },
+    { label: "P/O No.:", value: details.poNo || "" },
+    { label: "Clients Job No.:", value: details.clientJobNo || "" },
+    { label: "Attention:", value: details.attention },
+  ];
+
+  rightLabels.forEach((item) => {
+    drawLabelValue(item.label, item.value, RIGHT_BLOCK_X, true);
+  });
+
+  // ── LEFT BLOCK (below Job Description) ─────────────────────────────
+  const leftLabels = [
+    { label: "Client:", value: details.client },
+    { label: "Address:", value: details.address },
+    { label: "Job Address:", value: details.jobAddress },
+    { label: "Technician:", value: details.technician },
+    { label: "Date of Inspection:", value: details.dateOfInspection },
+  ];
+
+  leftLabels.forEach((item) => {
+    drawLabelValue(item.label, item.value, MARGIN, true);
+  });
+
+  // ── SEPARATOR LINE (below both blocks) ─────────────────────────────
+  const lineY = Math.max(y, rightY + rightLabels.length * ROW_H) + ROW_H;
+  doc
+    .moveTo(MARGIN, lineY)
+    .lineTo(PAGE.width - MARGIN, lineY)
+    .lineWidth(0.5)
+    .stroke(COLORS.border);
+
+  doc.y = lineY + 12;
 }
 
 // =====================================================================
@@ -405,7 +513,20 @@ exports.generateWorksheetPdf = async (req, res) => {
       { $unwind: "$client" },
     ]);
 
-    
+    const firstDetails = {
+      jobDescription: "Test job description",
+      reportNumber: "RPT001",
+      client: "Client name",
+      reportDate: "11-10-2025",
+      address: "Client address",
+      jobNumber: "JOB00002",
+      poNo: "TBA",
+      jobAddress: "job address",
+      clientId: "CLNT0000001",
+      attention: "John Doe",
+      technician: "John wick",
+      dateOfInspection: "15-10-2025",
+    };
 
     const localLogoPath = await downloadLogo(logoUrl).catch(() => null);
 
@@ -428,12 +549,12 @@ exports.generateWorksheetPdf = async (req, res) => {
 
     // First page header
     drawHeader(doc, mainObject, localLogoPath);
-
+    drawFirstDetails(doc, firstDetails);
     // Sections
     for (const section of mainObject.sections) {
       ensureSpace(doc, 60);
       drawSectionHeader(doc, section.name);
-      drawKeyValueGrid(doc, section, data.data, section.layout);
+      drawKeyValueGrid(doc, section, data.data, 2);
 
       for (const fld of section.fields.filter((f) => f.type === "table")) {
         drawTable(doc, fld, data.data[fld.fieldId] || []);
