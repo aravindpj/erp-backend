@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const axios = require("axios");
-
+const Job = require("../models/Job.model");
 // ---------------------------------------------------------------------
 // 1. STYLE (BLACK TEXT ONLY)
 // ---------------------------------------------------------------------
@@ -392,6 +392,21 @@ exports.generateWorksheetPdf = async (req, res) => {
     const logoUrl =
       "https://www.shutterstock.com/shutterstock/photos/2278726727/display_1500/stock-vector-minimalistic-circular-logo-sample-vector-2278726727.jpg";
 
+    const details = await Job.aggregate([
+      { $match: { jobId: "JOB00021" } },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "client",
+        },
+      },
+      { $unwind: "$client" },
+    ]);
+
+    
+
     const localLogoPath = await downloadLogo(logoUrl).catch(() => null);
 
     const doc = new PDFDocument({
@@ -407,7 +422,7 @@ exports.generateWorksheetPdf = async (req, res) => {
     doc.on("end", () => {
       const pdfBase64 = Buffer.concat(chunks).toString("base64");
       if (localLogoPath) fs.unlinkSync(localLogoPath);
-    //   res.setHeader("Content-Type", "text/plain");
+      //   res.setHeader("Content-Type", "text/plain");
       res.send(`${pdfBase64}`);
     });
 
