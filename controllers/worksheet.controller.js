@@ -23,7 +23,7 @@ exports.getAllSheets = async (req, res) => {
   try {
     const data = await WorkSheet.find();
     if (!data) {
-      return res.error({ status: 400, message: "There no worksheet added" });
+      return res.error({ status: 400, message: "There no worksheet added 1" });
     }
     return res.success({ status: 200, data });
   } catch (error) {
@@ -37,7 +37,7 @@ exports.getWorksheet = async (req, res) => {
     const {id} = req.params
     const data = await WorkSheet.findOne({workSheetId:id});
     if (!data) {
-      return res.error({ status: 400, message: "There no worksheet added" });
+      return res.error({ status: 400, message: "There no worksheet added 2" });
     }
     return res.success({ status: 200, data });
   } catch (error) {
@@ -50,7 +50,7 @@ exports.getAllSheetList = async (req, res) => {
   try {
     const data = await WorkSheet.find().select("name workSheetId description");
     if (!data) {
-      return res.error({ status: 400, message: "There no worksheet added" });
+      return res.error({ status: 400, message: "There no worksheet added 3" });
     }
     return res.success({ status: 200, data });
   } catch (error) {
@@ -113,7 +113,7 @@ exports.getWorksheetRecord = async (req,res)=>{
     const {id} = req.params
    const data = await WorksheetRecord.findOne({ recordId: id});
     if (!data) {
-      return res.error({ status: 400, message: "There no worksheet added" });
+      return res.error({ status: 400, message: "There no worksheet added 4" });
     }
     return res.success({ status: 200, data });
   } catch (error) {
