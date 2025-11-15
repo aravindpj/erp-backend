@@ -7,6 +7,11 @@ const UserSchema = new mongoose.Schema({
     required: false,
     unique:true
   },
+  companyId: {
+    type: String,
+    required: true,
+    unique:true
+  },
   userName: {
     type: String,
     required: true,
@@ -33,6 +38,10 @@ const UserSchema = new mongoose.Schema({
     required: true,
   },
   department: {
+    type: String,
+    required: true,
+  },
+  qualification: {
     type: String,
     required: true,
   },

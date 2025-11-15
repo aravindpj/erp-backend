@@ -1,5 +1,6 @@
 const User = require("../models/User.model");
 const Settings = require("../models/Settings.model");
+const Company = require("../models/Company.model");
 const path = require("path");
 const moment = require("moment");
 const fs = require("fs");
@@ -80,6 +81,7 @@ exports.login = async (req, res) => {
 
   try {
     let user = await User.findOne({ email });
+    console.log(user)
     if (!user) {
       return res.error({ message: "User not found", status: 400 });
     }
@@ -90,6 +92,8 @@ exports.login = async (req, res) => {
       return res.error({ message: "Invalid credentials", status: 400 });
     }
     let settings = await Settings.findOne({ userId: user.id });
+    
+    let company = await Company.findById(user.companyId)
     if (!settings) {
       settings = new Settings({
         userId: user.id,
@@ -102,7 +106,6 @@ exports.login = async (req, res) => {
     }
 
     user?.password && (user.password = null);
-
     const payload = { user };
 
     jwt.sign(
@@ -111,7 +114,7 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" },
       (err, token) => {
         if (err) throw err;
-        res.success({ data: { token, user, settings } });
+        res.success({ data: { token, user,company, settings, } });
       }
     );
   } catch (error) {
@@ -136,7 +139,7 @@ exports.getUserById = async (req, res) => {
     }
     res.success({ status: 200, data });
   } catch (error) {
-    if (err.kind === "ObjectId") {
+    if (error.kind === "ObjectId") {
       return res.error({ status: 404, message: "User not found", error });
     }
     res.status(500).send("Server error");

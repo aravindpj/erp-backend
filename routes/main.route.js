@@ -8,4 +8,5 @@ router.use("/worksheet",upload.single("file"),require("./worksheet.route"))
 router.use("/report",require("./reports.route"))
 router.use("/masters",require("./masters.route"))
 router.use("/settings",require("./settings.routes"))
+router.use("/company",require("./company.routes"))
 module.exports = router
