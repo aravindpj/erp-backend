@@ -151,6 +151,7 @@ exports.updateUser = async (req, res) => {
   let userFields = {};
   try {
     let user = await User.findOne({ id: req.body.id }).select("-password");
+    let company = await Company.findById(user.companyId)
     if (!user) return res.error({ status: 404, message: "User not found" });
 
     if (req?.body?.password) {
@@ -175,7 +176,7 @@ exports.updateUser = async (req, res) => {
       { new: true }
     ).select("-password");
 
-    res.success({ status: 200, message: "Updated successfully", data: user });
+    res.success({ status: 200, message: "Updated successfully", data: {user,company} });
   } catch (error) {
     console.log(error);
     res.error({ status: 500, error });
