@@ -303,65 +303,82 @@ function drawTable(doc, tableDef, rows = []) {
 // ---------------------------------------------------------------------
 // 4.5 DRAW FIRST DETAILS – NDT PLUS EXACT LAYOUT (FIXED OVERLAP)
 // ---------------------------------------------------------------------
+
 function drawFirstDetails(doc, details) {
-  const ROW_H = 13; // line height
-  const TOP_MARGIN = 15; // space after header
-  const LABEL_W = 80; // label width
-  const VALUE_W = 220; // value width
-  const RIGHT_BLOCK_X = 380; // right block X (aligned to right)
+  const ROW_H = 15;
+  const TOP_MARGIN = 15;
+
+  // Table Column Coordinates
+  const COL1_LABEL_X = MARGIN;
+  const COL1_VALUE_X = MARGIN + 95;
+
+  const COL2_LABEL_X = MARGIN + 360;
+  const COL2_VALUE_X = COL2_LABEL_X + 95;
 
   let y = doc.y + TOP_MARGIN;
 
-  // ── HELPER: draw label + value (forces new line) ───────────────────
-  const drawLabelValue = (label, value, x, isBold = false) => {
-    const valueX = x + LABEL_W;
-    doc
-      .font(isBold ? "Bold" : "Helvetica")
-      .fontSize(10)
-      .fillColor(COLORS.black)
-      .text(label, x, y, { width: LABEL_W, continued: false });
-
-    doc
-      .font("Helvetica")
-      .text(value || "", valueX, y, { width: VALUE_W, continued: false });
-    y += ROW_H; // advance to next line
-  };
-
-  // ── JOB DESCRIPTION (full width, multi-line) ───────────────────────
-  drawLabelValue("Job Description:", details.jobDescription, MARGIN, true);
-  y += ROW_H * 1.5; // extra space after multi-line
-
-  // ── RIGHT BLOCK (starts at same Y as Job Description) ───────────────
-  let rightY = doc.y + TOP_MARGIN + ROW_H; // same start as Job Desc
-
-  const rightLabels = [
-    { label: "Report No.:", value: details.reportNumber },
-    { label: "Report Date:", value: details.reportDate },
-    { label: "Job No.:", value: details.jobNumber || "" },
-    { label: "P/O No.:", value: details.poNo || "" },
-    { label: "Clients Job No.:", value: details.clientJobNo || "" },
-    { label: "Attention:", value: details.attention },
-  ];
-
-  rightLabels.forEach((item) => {
-    drawLabelValue(item.label, item.value, RIGHT_BLOCK_X, true);
+  // ───────────────────────────────────────────────
+  // JOB DESCRIPTION (full-width table row)
+  // ───────────────────────────────────────────────
+  doc.font("Bold").fontSize(10).text("Job Description:", COL1_LABEL_X, y);
+  doc.font("Helvetica").text(details.jobDescription || "", COL1_VALUE_X, y, {
+    width: PAGE.width - MARGIN * 2 - 95,
+    lineBreak: true,
   });
 
-  // ── LEFT BLOCK (below Job Description) ─────────────────────────────
-  const leftLabels = [
-    { label: "Client:", value: details.client },
-    { label: "Address:", value: details.address },
-    { label: "Job Address:", value: details.jobAddress },
-    { label: "Technician:", value: details.technician },
-    { label: "Date of Inspection:", value: details.dateOfInspection },
+  y += ROW_H * 2;
+
+  // ───────────────────────────────────────────────
+  // RIGHT COLUMN TABLE (Report info)
+  // ───────────────────────────────────────────────
+  const rightRows = [
+    ["Report No.:", details.reportNumber],
+    ["Report Date:", details.reportDate],
+    ["Job No.:", details.jobNumber || ""],
+    ["P/O No.:", details.poNo || ""],
+    ["Client Job No.:", details.clientJobNo || ""],
+    ["Attention:", details.attention],
   ];
 
-  leftLabels.forEach((item) => {
-    drawLabelValue(item.label, item.value, MARGIN, true);
+  rightRows.forEach(([label, value]) => {
+    doc.font("Bold").text(label, COL2_LABEL_X, y);
+    doc.font("Helvetica").text(value || "", COL2_VALUE_X, y);
+    y += ROW_H;
   });
 
-  // ── SEPARATOR LINE (below both blocks) ─────────────────────────────
-  const lineY = Math.max(y, rightY + rightLabels.length * ROW_H) + ROW_H;
+  // Track right column bottom for table alignment
+  const rightBottom = y;
+
+  // Reset Y for left block (below job description)
+  y = doc.y + TOP_MARGIN + ROW_H * 2;
+
+  // ───────────────────────────────────────────────
+  // LEFT COLUMN TABLE
+  // ───────────────────────────────────────────────
+  const leftRows = [
+    ["Client:", details.client],
+    ["Address:", details.address],
+    ["Job Address:", details.jobAddress],
+    ["Technician:", details.technician],
+    ["Date of Inspection:", details.dateOfInspection],
+  ];
+
+  leftRows.forEach(([label, value]) => {
+    doc.font("Bold").text(label, COL1_LABEL_X, y);
+    doc.font("Helvetica").text(value || "", COL1_VALUE_X, y, {
+      width: 250,
+    });
+    y += ROW_H;
+  });
+
+  // Left column bottom
+  const leftBottom = y;
+
+  // ───────────────────────────────────────────────
+  // SEPARATOR LINE (below both table columns)
+  // ───────────────────────────────────────────────
+  const lineY = Math.max(leftBottom, rightBottom) + 5;
+
   doc
     .moveTo(MARGIN, lineY)
     .lineTo(PAGE.width - MARGIN, lineY)
@@ -370,6 +387,7 @@ function drawFirstDetails(doc, details) {
 
   doc.y = lineY + 12;
 }
+
 
 // =====================================================================
 // 5. MAIN CONTROLLER

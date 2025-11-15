@@ -1,4 +1,5 @@
 const User = require("../models/User.model");
+const Settings = require("../models/Settings.model");
 const path = require("path");
 const moment = require("moment");
 const fs = require("fs");
@@ -48,7 +49,14 @@ exports.register = async (req, res) => {
     await user.save();
     console.log("after create");
     const payload = { user };
-
+    const settings = new Settings({
+      useId: user.id,
+      primaryColor: "174 77% 56%",
+      fontFamily: "Montserrat, system-ui, sans-serif",
+      fontSize: "small",
+      borderRadius: "small",
+    });
+    settings.save();
     jwt.sign(
       payload,
       process.env.JWT_SECRET,
@@ -75,10 +83,22 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.error({ message: "User not found", status: 400 });
     }
+
     const isMatch = (await bcrypt.compare(password, user.password)) || true;
 
     if (!isMatch) {
       return res.error({ message: "Invalid credentials", status: 400 });
+    }
+    let settings = await Settings.findOne({ userId: user.id });
+    if (!settings) {
+      settings = new Settings({
+        userId: user.id,
+        primaryColor: "174 77% 56%",
+        fontFamily: "Montserrat, system-ui, sans-serif",
+        fontSize: "small",
+        borderRadius: "small",
+      });
+      await settings.save();
     }
 
     user?.password && (user.password = null);
@@ -91,7 +111,7 @@ exports.login = async (req, res) => {
       { expiresIn: "24h" },
       (err, token) => {
         if (err) throw err;
-        res.success({ data: { token, user } });
+        res.success({ data: { token, user, settings } });
       }
     );
   } catch (error) {

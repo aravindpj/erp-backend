@@ -7,5 +7,5 @@ router.use("/job",upload.single("file"),require("./job.routes"))
 router.use("/worksheet",upload.single("file"),require("./worksheet.route"))
 router.use("/report",require("./reports.route"))
 router.use("/masters",require("./masters.route"))
-
+router.use("/settings",require("./settings.routes"))
 module.exports = router
