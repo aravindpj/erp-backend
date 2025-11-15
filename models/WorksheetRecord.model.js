@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const WorksheetRecordSchema = new mongoose.Schema(
   {
+    jobId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     recordId: {
       type: String,
       required: true,

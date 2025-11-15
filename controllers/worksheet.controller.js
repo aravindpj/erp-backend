@@ -1,5 +1,5 @@
 const WorkSheet = require("../models/WorkSheet.model");
-const WorksheetRecord = require("../models/WorksheetRecord.model")
+const WorksheetRecord = require("../models/WorksheetRecord.model");
 exports.createWorksheet = async (req, res) => {
   try {
     console.log(req.body);
@@ -34,8 +34,8 @@ exports.getAllSheets = async (req, res) => {
 
 exports.getWorksheet = async (req, res) => {
   try {
-    const {id} = req.params
-    const data = await WorkSheet.findOne({workSheetId:id});
+    const { id } = req.params;
+    const data = await WorkSheet.findOne({ workSheetId: id });
     if (!data) {
       return res.error({ status: 400, message: "There no worksheet added 2" });
     }
@@ -90,28 +90,30 @@ exports.updateWorkSheet = async (req, res) => {
   }
 };
 
-exports.saveWorkSheetRecord = async(req,res)=>{
-    try{
-      let record = new WorksheetRecord({...req.body})
-       const sheetrecord = await WorksheetRecord.findOne({ recordId: req.body.recordId });
+exports.saveWorkSheetRecord = async (req, res) => {
+  try {
+    let record = new WorksheetRecord({ ...req.body });
+    const sheetrecord = await WorksheetRecord.findOne({
+      recordId: req.body.recordId,
+    });
     if (sheetrecord) {
       return res.error({
         status: 500,
         message: `This worksheet already saved`,
       });
     }
-    await record.save()
+    await record.save();
     res.success({ status: 200, message: "Work sheet data saved successfully" });
   } catch (error) {
     console.log(error);
     return res.error({ status: 500, error });
   }
-}
+};
 
-exports.getWorksheetRecord = async (req,res)=>{
-     try {
-    const {id} = req.params
-   const data = await WorksheetRecord.findOne({ recordId: id});
+exports.getWorksheetRecord = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await WorksheetRecord.findOne({ recordId: id });
     if (!data) {
       return res.error({ status: 400, message: "There no worksheet added 4" });
     }
@@ -120,7 +122,52 @@ exports.getWorksheetRecord = async (req,res)=>{
     console.log(error);
     return res.error({ status: 500, error });
   }
-}
+};
+
+exports.getWorksheetRecordData = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = await WorksheetRecord.aggregate([
+      { $match: { recordId: id } },
+
+      {
+        $lookup: {
+          from: "worksheets",
+          localField: "worksheetId",
+          foreignField: "workSheetId",
+          as: "worksheet",
+        },
+      },
+      { $unwind: "$worksheet" },
+
+      {
+        $lookup: {
+          from: "jobrequests",
+          localField: "jobId",
+          foreignField: "jobId",
+          as: "job",
+        },
+      },
+      { $unwind: "$job" },
+      {
+        $project: {
+          _id: 0,
+          record: "$$ROOT", 
+          worksheet: "$worksheet", 
+          job: "$job", 
+        },
+      },
+    ]);
+
+    if (!data) {
+      return res.error({ status: 400, message: "There no worksheet added 4" });
+    }
+    return res.success({ status: 200, data });
+  } catch (error) {
+    console.log(error);
+    return res.error({ status: 500, error });
+  }
+};
 
 exports.updateWorksheetRecord = async (req, res) => {
   try {
