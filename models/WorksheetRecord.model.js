@@ -12,6 +12,11 @@ const WorksheetRecordSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    clientId: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     worksheetId: {
       type: String,
       required: true,

@@ -129,7 +129,6 @@ exports.getWorksheetRecordData = async (req, res) => {
     const { id } = req.params;
     const data = await WorksheetRecord.aggregate([
       { $match: { recordId: id } },
-
       {
         $lookup: {
           from: "worksheets",
@@ -139,6 +138,15 @@ exports.getWorksheetRecordData = async (req, res) => {
         },
       },
       { $unwind: "$worksheet" },
+      {
+        $lookup: {
+          from: "clients",
+          localField: "clientId",
+          foreignField: "clientId",
+          as: "client",
+        },
+      },
+      { $unwind: "$client" },
 
       {
         $lookup: {
@@ -152,9 +160,10 @@ exports.getWorksheetRecordData = async (req, res) => {
       {
         $project: {
           _id: 0,
-          record: "$$ROOT", 
-          worksheet: "$worksheet", 
-          job: "$job", 
+          record: "$$ROOT",
+          worksheet: "$worksheet",
+          job: "$job",
+          client: "$client",
         },
       },
     ]);
