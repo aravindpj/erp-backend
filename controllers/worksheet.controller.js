@@ -127,46 +127,101 @@ exports.getWorksheetRecord = async (req, res) => {
 exports.getWorksheetRecordData = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = await WorksheetRecord.aggregate([
-      { $match: { recordId: id } },
-      {
-        $lookup: {
-          from: "worksheets",
-          localField: "worksheetId",
-          foreignField: "workSheetId",
-          as: "worksheet",
-        },
-      },
-      { $unwind: "$worksheet" },
-      {
-        $lookup: {
-          from: "clients",
-          localField: "clientId",
-          foreignField: "clientId",
-          as: "client",
-        },
-      },
-      { $unwind: "$client" },
+const data = await WorksheetRecord.aggregate([
+  { $match: { recordId: id } },
 
-      {
-        $lookup: {
-          from: "jobrequests",
-          localField: "jobId",
-          foreignField: "jobId",
-          as: "job",
+  // Lookup Worksheet
+  {
+    $lookup: {
+      from: "worksheets",
+      localField: "worksheetId",
+      foreignField: "workSheetId",
+      as: "worksheet",
+    },
+  },
+  { $unwind: "$worksheet" },
+
+  // Lookup Client
+  {
+    $lookup: {
+      from: "clients",
+      localField: "clientId",
+      foreignField: "clientId",
+      as: "client",
+    },
+  },
+  { $unwind: "$client" },
+
+  // Lookup Job
+  {
+    $lookup: {
+      from: "jobrequests",
+      localField: "jobId",
+      foreignField: "jobId",
+      as: "job",
+    },
+  },
+  { $unwind: "$job" },
+
+  {
+    $lookup: {
+      from: "users",
+      let: { techCodes: "$job.testRows.tech" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $in: ["$id", "$$techCodes"] }
+          }
         },
-      },
-      { $unwind: "$job" },
-      {
-        $project: {
-          _id: 0,
-          record: "$$ROOT",
-          worksheet: "$worksheet",
-          job: "$job",
-          client: "$client",
-        },
-      },
-    ]);
+        {
+          $project: { _id: 1,id: 1, userName: 1, email: 1,  }
+        }
+      ],
+      as: "techUsers"
+    }
+  },
+  
+  {
+    $addFields: {
+      "job.testRows": {
+        $map: {
+          input: "$job.testRows",
+          as: "row",
+          in: {
+            $mergeObjects: [
+              "$$row",
+              {
+                tech: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$techUsers",
+                        as: "u",
+                        cond: { $eq: ["$$u.id", "$$row.tech"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  // Final projection
+  {
+    $project: {
+      _id: 0,
+      record: "$$ROOT",
+      worksheet: "$worksheet",
+      job: "$job",
+      client: "$client",
+    }
+  }
+]);
 
     if (!data) {
       return res.error({ status: 400, message: "There no worksheet added 4" });
