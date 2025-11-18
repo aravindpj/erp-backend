@@ -76,15 +76,32 @@ Jobschema.pre("insertMany", function (next, docs) {
 
 Jobschema.post("insertMany", async function (docs) {
   try {
-    const notifications = docs.map((d) => ({
-      userId: d.tech,
-      title: "New job request",
-      message:  `New job created: ${d.jobId}`,
-      type: "default" ,
-      isRead: false,
-    }));
+    let notifictionArray = [];
+    let userIds = {};
+    docs.forEach((d) => {
+      let userId = d.tech
+      if (userIds[userId]) {
+        userIds[userId].count++;
+        notifictionArray[userIds[userId].index].message = `You have ${userIds[userId].count} new job assignments.`;
+      } else {
+        userIds[userId] = {
+          index: notifictionArray.length,
+          count: 1,
+        };
+        notifictionArray = [
+          ...notifictionArray,
+          {
+            userId,
+            message: `You have a new job assignment.`,
+            title: "New Job Schedules",
+            type: "default",
+            isRead: false,
+          },
+        ];
+      }
+    });
 
-    await Notification.insertMany(notifications);
+    await Notification.insertMany(notifictionArray);
   } catch (err) {
     console.error("Notification insert error:", err);
   }

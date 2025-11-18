@@ -11,4 +11,9 @@ const Notification = new mongoose.Schema(
   { timestamps: true }
 );
 
+Notification.post("insertMany", function (doc) {
+  // Emit real-time event
+  console.log("inside the notification schema",doc);
+});
+
 module.exports = mongoose.model("Notification", Notification);
