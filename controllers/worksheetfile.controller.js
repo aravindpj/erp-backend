@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const axios = require("axios");
-const Job = require("../models/Job.model");
+const {JobRequestSchema} = require("../models/Job.model");
 // ---------------------------------------------------------------------
 // 1. STYLE (BLACK TEXT ONLY)
 // ---------------------------------------------------------------------
@@ -518,7 +518,7 @@ exports.generateWorksheetPdf = async (req, res) => {
     const logoUrl =
       "https://www.shutterstock.com/shutterstock/photos/2278726727/display_1500/stock-vector-minimalistic-circular-logo-sample-vector-2278726727.jpg";
 
-    const details = await Job.aggregate([
+    const details = await JobRequestSchema.aggregate([
       { $match: { jobId: "JOB00021" } },
       {
         $lookup: {
