@@ -17,10 +17,12 @@ const JobRequestSchema = new mongoose.Schema(
     lastDate: { type: Date, required: true },
     clientId: { type: String, required: true },
     clientName: { type: String, required: true },
+    clientAddress: { type: String, required: true },
     summary: { type: String, required: true },
     detailsProvided: { type: String, required: true },
     comment: { type: String },
-    divisionRules: { type: String, required: true },
+    timeRequired: { type: String, required: true },
+    requiredDocument: { type: String, required: true },
     testRows: { type: [TestRowSchema], default: [] },
     status: {
       type: String,

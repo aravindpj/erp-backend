@@ -1,15 +1,117 @@
 const Job = require("../models/Job.model");
-
+const Client = require("../models/Client.model");
+const EmailService = require("../services/email");
 exports.saveJobRequest = async (req, res) => {
   try {
-    const jobrequest = new Job({ ...req.body });
-    await jobrequest.save();
-    return res.success({
+    let jobrequest = new Job({ ...req.body });
+    jobrequest = await jobrequest.save();
+    const client = await Client.findOne({ clientId: req.body.clientId });
+    await EmailService.sendMail({
+      html: `<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Request Created</title>
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        background: #ffffff;
+        margin: 40px auto;
+        padding: 24px 32px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      }
+      h2 {
+        color: #333333;
+        font-size: 22px;
+        margin-bottom: 8px;
+      }
+      p {
+        color: #555555;
+        line-height: 1.6;
+        font-size: 15px;
+      }
+      .job-info {
+        background: #f1f3f5;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+      .job-info p {
+        margin: 4px 0;
+      }
+      .label {
+        font-weight: 600;
+        color: #222;
+      }
+      .footer {
+        margin-top: 32px;
+        text-align: center;
+        font-size: 13px;
+        color: #777;
+      }
+      .footer a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+      .highlight {
+        color: #007bff;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>✅ Job Request Created Successfully!</h2>
+      <p>Dear <span class="highlight">${client.businessName}</span>,</p>
+      <p>
+        We’re pleased to inform you that your job request has been successfully created.  
+        Our team will review the details and get back to you soon.
+      </p>
+
+      <div class="job-info">
+        <p><span class="label">Job ID:</span> ${jobrequest.jobId}</p>
+        <p><span class="label">Client Name:</span> ${client.businessName}</p>
+        <p><span class="label">Client Email:</span> ${client.email}</p>
+        <p><span class="label">Address:</span> ${client.businessAddress}</p>
+        <p><span class="label">Job Details:</span> ${
+          jobrequest.detailsProvided
+        }</p>
+      </div>
+
+      <p>
+        Thank you for choosing our services.<br />
+        If you have any questions, feel free to reply to this email.
+      </p>
+
+      <div class="footer">
+        <p>© ${new Date().getFullYear()} Your Company Name. All rights reserved.</p>
+        <p><a href="http://localhost:${
+          process.env.UI_PORT
+        }/job-details/${jobrequest.jobId}">View more details</a></p>
+      </div>
+    </div>
+  </body>
+  </html>
+  `,
+      subject: "✅ Job Request Created Successfully",
+      text: `Job request created successfully with Job ID: ${jobrequest.jobId}`,
+      to: req.body.clientEmail,
+    });
+  return res.success({
       status: 200,
       message: "Job request created successfully",
       data: jobrequest,
     });
   } catch (error) {
+    console.log(error);
     return res.error({ status: 500, error });
   }
 };
@@ -31,6 +133,20 @@ exports.getJobRequests = async (req, res) => {
   }
 };
 
+exports.getJobDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let data = await Job.findOne({ jobId: id });
+    if (!data) {
+      return res.error({ status: 404, message: "Job not found !" });
+    }
+    return res.success({ status: 200, data });
+  } catch (error) {
+    console.log(error);
+    return res.error({ status: 500, error });
+  }
+};
+
 exports.updateJobRequest = async (req, res) => {
   try {
     const updateFields = {};
@@ -44,10 +160,14 @@ exports.updateJobRequest = async (req, res) => {
       { $set: updateFields },
       { new: true }
     );
-    if(data){
-      return res.success({status:200,data,message:"Job request updated successfully"})
-    }else{
-       res.success({status:404,data,message:"No job found to update"})
+    if (data) {
+      return res.success({
+        status: 200,
+        data,
+        message: "Job request updated successfully",
+      });
+    } else {
+      res.success({ status: 404, data, message: "No job found to update" });
     }
     return res.success({
       status: 200,

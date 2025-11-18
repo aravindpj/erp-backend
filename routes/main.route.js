@@ -5,5 +5,8 @@ router.use("/users",upload.single("file"),require("./users.route"))
 router.use("/client",upload.single("file"),require("./client.route"))
 router.use("/job",upload.single("file"),require("./job.routes"))
 router.use("/worksheet",upload.single("file"),require("./worksheet.route"))
-
+router.use("/report",require("./reports.route"))
+router.use("/masters",require("./masters.route"))
+router.use("/settings",require("./settings.routes"))
+router.use("/company",require("./company.routes"))
 module.exports = router

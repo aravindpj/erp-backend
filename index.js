@@ -10,8 +10,8 @@ app.use(cors({
   origin:"*"
 }))
 app.use(responseHandler)
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit: "50mb"}));
+app.use(express.urlencoded({ extended: true,limit: "50mb" }));
 
 // Connect Database
 connectDB();
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 // Define Routes
-app.use('/api', require('./routes/mainRoutes'));
+app.use('/api', require('./routes/main.route'));
 
 app.listen(port, () => {
   console.log(`Listening on http://localhost:${port}`);
