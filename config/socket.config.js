@@ -1,26 +1,39 @@
-// socket.js
 let io = null;
 const Server = require("socket.io");
+
+const userSockets = {};  // userId → [socketId, socketId...]
+
 function initSocket(server) {
   io = Server(server, {
     cors: {
-      origin: "*", // or your frontend origin
-      origin: process.env.FRONTEND_ORIGIN || "http://localhost:3000",
+      origin: "*",
       methods: ["GET", "POST"],
     },
     transports: ["websocket"],
-    pingTimeout: 30000,
-    maxHttpBufferSize: 1e6,
   });
 
   io.on("connection", (socket) => {
-    console.log("User Connectedq:", socket.id);
-    socket.on("send_notification", (data) => {
-      console.log("Received:", data);
-      io.emit("new_notification", data);
-    });
+    const userId = socket.handshake.query.userId;
+
+    if (userId) {
+      if (!userSockets[userId]) userSockets[userId] = [];
+      userSockets[userId].push(socket.id);
+
+      console.log("User Connected:", userId, userSockets[userId]);
+    }
 
     socket.on("disconnect", () => {
+      if (userId) {
+        userSockets[userId] = userSockets[userId].filter(
+          (id) => id !== socket.id
+        );
+
+        // remove user entry if no active sockets left
+        if (userSockets[userId].length === 0) {
+          delete userSockets[userId];
+        }
+      }
+
       console.log("User Disconnected:", socket.id);
     });
   });
@@ -33,4 +46,8 @@ function getSocket() {
   return io;
 }
 
-module.exports = { initSocket, getSocket };
+function getUserSockets(userId) {
+  return userSockets[userId] || [];
+}
+
+module.exports = { initSocket, getSocket, getUserSockets };

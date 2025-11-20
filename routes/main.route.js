@@ -9,5 +9,5 @@ router.use("/report",require("./reports.route"))
 router.use("/masters",require("./masters.route"))
 router.use("/settings",require("./settings.routes"))
 router.use("/company",require("./company.routes"))
-router.get("/dummy",require("../controllers/dummy.controller"))
+router.post("/dummy",require("../controllers/dummy.controller").dummyController)
 module.exports = router

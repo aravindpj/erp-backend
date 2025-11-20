@@ -1,19 +1,25 @@
+const {getSocket,getUserSockets} = require("../config/socket.config")
+
 exports.dummyController = async (req, res) => {
+  const {data} = req.body
   try {
     const socket = getSocket();
-    socket.emit(
-      "notification",
-      { userId: "u123", message: "Hello!" },
-      (response) => {
-        if (response.ok) {
-          console.log("Saved id:", response.id);
-        } else {
-          console.error("Send failed:", response.error);
-        }
-      }
-    );
+    const sockets = getUserSockets(data.id);
+
+    if (sockets.length === 0) {
+      return res.error({ status: 404, error: "User not online" });
+    }
+
+    sockets.forEach((socketId) => {
+      socket.to(socketId).emit("notification:new", {
+        message: data.message,
+      });
+    });
+
+
     return res.success({ status: 200 });
   } catch (error) {
+    console.log(error)
     return res.error({ status: 500, error });
   }
 };
