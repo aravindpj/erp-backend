@@ -126,7 +126,18 @@ exports.saveJobRequest = async (req, res) => {
 
 exports.getJobRequests = async (req, res) => {
   try {
-    const data = await JobRequestSchema.find({ clientId: req.params.id });
+    // const data = await JobRequestSchema.find({ clientId: req.params.id });
+    const data = await JobRequestSchema.aggregate([
+      { $match: { clientId: req.params.id } },
+      {
+        $lookup: {
+          from: "jobs",
+          localField: "jobId", 
+          foreignField: "jobId", 
+          as: "testRows",
+        },
+      },
+    ]);
     if (!data || data.length === 0) {
       return res.error({
         status: 404,
