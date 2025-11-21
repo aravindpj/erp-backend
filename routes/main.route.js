@@ -10,4 +10,5 @@ router.use("/masters",require("./masters.route"))
 router.use("/settings",require("./settings.routes"))
 router.use("/company",require("./company.routes"))
 router.post("/dummy",require("../controllers/dummy.controller").dummyController)
+router.use("/notification",require("./notification.routes"))
 module.exports = router

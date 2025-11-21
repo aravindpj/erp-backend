@@ -190,11 +190,11 @@ exports.updateJobRequest = async (req, res) => {
     } else {
       res.success({ status: 404, data, message: "No job found to update" });
     }
-    return res.success({
-      status: 200,
-      message: "Job request created successfully",
-      data: jobrequest,
-    });
+    // return res.success({
+    //   status: 200,
+    //   message: "Job request created successfully",
+    //   data: jobrequest,
+    // });
   } catch (error) {
     return res.error({ status: 500, error });
   }

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const { getSocket, getUserSockets } = require("../config/socket.config");
 const Notification = new mongoose.Schema(
   {
     userId: { type: String, require: true },
@@ -13,7 +13,18 @@ const Notification = new mongoose.Schema(
 
 Notification.post("insertMany", function (doc) {
   // Emit real-time event
-  console.log("inside the notification schema",doc);
+  try {
+    const socket = getSocket();
+    let sockets = [];
+    doc.forEach((n) => {
+      sockets = getUserSockets(n.userId);
+      sockets.forEach((socketId) => {
+        socket.to(socketId).emit("notification:new", n);
+      });
+    });
+  } catch (error) {
+    console.log("error in notification ==> ", error);
+  }
 });
 
 module.exports = mongoose.model("Notification", Notification);
