@@ -175,16 +175,18 @@ exports.updateJobRequest = async (req, res) => {
       }
     }
 
-    let data = await JobRequestSchema.findOneAndUpdate(
-      { jobId: req.body.jobId },
-      { $set: updateFields },
-      { new: true }
-    );
+    console.log(updateFields)
+
+    // let data = await JobRequestSchema.findOneAndUpdate(
+    //   { jobId: req.body.jobId },
+    //   { $set: updateFields },
+    //   { new: true }
+    // );
 
     if (data) {
       return res.success({
         status: 200,
-        data,
+        data:"test",
         message: "Job request updated successfully",
       });
     } else {

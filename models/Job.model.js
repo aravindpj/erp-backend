@@ -3,20 +3,23 @@ const Counter = require("./Counter.model");
 const Notification = require("./Notification.model");
 const moment = require("moment");
 
-const Jobschema = new mongoose.Schema({
-  jobId: { type: String, required: true, unique: false },
-  testMethod: { type: String, required: true },
-  testSpec: { type: String, required: true },
-  acceptanceSpec: { type: String, required: true },
-  toTable: { type: String, required: true },
-  testProcedure: { type: String, required: true },
-  tech: { type: String, required: true },
-  status: {
-    type: String,
-    default: "Pending",
-    enum: ["Pending", "Completed", "In progress"],
+const Jobschema = new mongoose.Schema(
+  {
+    jobId: { type: String, required: true, unique: false },
+    testMethod: { type: String, required: true },
+    testSpec: { type: String, required: true },
+    acceptanceSpec: { type: String, required: true },
+    toTable: { type: String, required: true },
+    testProcedure: { type: String, required: true },
+    tech: { type: String, required: true },
+    status: {
+      type: String,
+      default: "Pending",
+      enum: ["Pending", "Completed", "In progress"],
+    },
   },
-});
+  { timestamps: true }
+);
 
 const JobRequestSchema = new mongoose.Schema(
   {
@@ -79,10 +82,12 @@ Jobschema.post("insertMany", async function (docs) {
     let notifictionArray = [];
     let userIds = {};
     docs.forEach((d) => {
-      let userId = d.tech
+      let userId = d.tech;
       if (userIds[userId]) {
         userIds[userId].count++;
-        notifictionArray[userIds[userId].index].message = `You have ${userIds[userId].count} new job assignments.`;
+        notifictionArray[
+          userIds[userId].index
+        ].message = `You have ${userIds[userId].count} new job assignments.`;
       } else {
         userIds[userId] = {
           index: notifictionArray.length,
