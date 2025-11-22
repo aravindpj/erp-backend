@@ -132,8 +132,8 @@ exports.getJobRequests = async (req, res) => {
       {
         $lookup: {
           from: "jobs",
-          localField: "jobId", 
-          foreignField: "jobId", 
+          localField: "jobId",
+          foreignField: "jobId",
           as: "testRows",
         },
       },
@@ -175,18 +175,31 @@ exports.updateJobRequest = async (req, res) => {
       }
     }
 
-    console.log(updateFields)
+    let data = await JobRequestSchema.findOneAndUpdate(
+      { jobId: req.body.jobId },
+      { $set: updateFields },
+      { new: true }
+    );
+    let jobs = req.body.testRows;
+    console.log(req.body)
+    const incomingTechIds = jobs.map((j) => j.tech);
+    for (const item of jobs) {
+      await Job.updateOne(
+        { jobId: data.jobId, tech: item.tech },
+        { ...item, jobId: data.jobId },
+        { upsert: true }
+      );
+    }
 
-    // let data = await JobRequestSchema.findOneAndUpdate(
-    //   { jobId: req.body.jobId },
-    //   { $set: updateFields },
-    //   { new: true }
-    // );
+    await Job.deleteMany({
+      jobId:data.jobId,
+      tech: { $nin: incomingTechIds },
+    });
 
     if (data) {
       return res.success({
         status: 200,
-        data:"test",
+        data: "test",
         message: "Job request updated successfully",
       });
     } else {
@@ -198,6 +211,7 @@ exports.updateJobRequest = async (req, res) => {
     //   data: jobrequest,
     // });
   } catch (error) {
+    console.log(error)
     return res.error({ status: 500, error });
   }
 };

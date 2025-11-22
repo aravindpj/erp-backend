@@ -112,6 +112,52 @@ Jobschema.post("insertMany", async function (docs) {
   }
 });
 
+Jobschema.post('updateOne', async function(result) {
+  try {
+    const query = this.getQuery();
+    const update = this.getUpdate();
+
+    // check if updateOne created a new doc (upsert)
+    const wasUpserted = result?.upsertedCount > 0 || result?.upsertedId;
+
+    // if no tech in update, skip
+    const tech = update?.tech || query?.tech;
+    if (!tech) return;
+
+    // Prepare message
+    let existingNotif = await Notification.findOne({ userId: tech, isRead: false });
+
+    if (existingNotif) {
+      // Update count message
+      const updatedCount = (existingNotif.count || 1) + 1;
+
+      await Notification.updateOne(
+        { userId: tech },
+        {
+          $set: {
+            message: `You have ${updatedCount} new job assignments.`,
+            updatedAt: new Date()
+          },
+          $inc: { count: 1 }
+        }
+      );
+    } else {
+      // Insert new notification
+      await Notification.create({
+        userId: tech,
+        title: "New Job Schedules",
+        message: "You have a new job assignment.",
+        type: "default",
+        isRead: false,
+        count: 1
+      });
+    }
+
+  } catch (err) {
+    console.error("Notification update error:", err);
+  }
+});
+
 module.exports = {
   JobRequestSchema: mongoose.model("JobRequest", JobRequestSchema),
   Job: mongoose.model("Job", Jobschema),

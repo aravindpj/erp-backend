@@ -27,4 +27,32 @@ Notification.post("insertMany", function (doc) {
   }
 });
 
+Notification.post("save", function (doc) {
+  try {
+    const socket = getSocket();
+    const sockets = getUserSockets(doc.userId);
+
+    sockets.forEach((socketId) => {
+      socket.to(socketId).emit("notification:new", doc);
+    });
+  } catch (error) {
+    console.log("Error sending save notification =>", error);
+  }
+});
+
+Notification.post("findOneAndUpdate", async function (result) {
+  try {
+    if (!result) return;
+
+    const socket = getSocket();
+    const sockets = getUserSockets(result.userId);
+
+    sockets.forEach((socketId) => {
+      socket.to(socketId).emit("notification:new", result);
+    });
+  } catch (error) {
+    console.log("Update notification error =>", error);
+  }
+});
+
 module.exports = mongoose.model("Notification", Notification);
